@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>作品管理后台 — Miracle Photography</title>
+<style>
+/* ===== Reset & Theme ===== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0A0A0A;--surface:#141414;--gold:#C8A96E;--gold-dim:rgba(200,169,110,0.15);
+  --text:#E8E0D0;--text-dim:#888;--text-weak:#555;--border:#1A1A1A;
+  --danger:#C0392B;--danger-bg:rgba(192,57,43,0.1);--success:#27AE60;
+  --radius:6px;
+}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+a{color:var(--gold);text-decoration:none}
+button{cursor:pointer;font-family:inherit}
+
+/* ===== Layout ===== */
+.topbar{
+  position:sticky;top:0;z-index:100;background:rgba(10,10,10,0.92);backdrop-filter:blur(12px);
+  border-bottom:0.5px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;
+}
+.topbar h1{font-family:'Playfair Display',Georgia,serif;font-size:1.2rem;color:var(--gold);letter-spacing:3px;font-weight:400}
+.topbar-actions{display:flex;gap:12px;align-items:center}
+.btn{
+  padding:8px 20px;border-radius:20px;font-size:12px;font-weight:500;letter-spacing:1px;
+  border:0.5px solid var(--border);background:var(--surface);color:var(--text-dim);
+  transition:all 0.25s ease;display:inline-flex;align-items:center;gap:6px;
+}
+.btn:hover{color:var(--text);border-color:var(--text-dim)}
+.btn-primary{background:var(--gold);color:var(--bg);border-color:var(--gold);font-weight:600}
+.btn-primary:hover{background:#d4b47a;color:var(--bg)}
+.btn-danger{color:var(--danger)}
+.btn-danger:hover{background:var(--danger-bg);border-color:var(--danger)}
+.btn-sm{padding:5px 12px;font-size:11px}
+.btn-icon{width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%}
+
+.container{max-width:1400px;margin:0 auto;padding:24px}
+
+/* ===== Stats Bar ===== */
+.stats-bar{
+  display:flex;gap:16px;margin-bottom:28px;flex-wrap:wrap;
+}
+.stat-card{
+  flex:1;min-width:120px;background:var(--surface);border-radius:var(--radius);
+  border:0.5px solid var(--border);padding:16px 20px;text-align:center;
+}
+.stat-num{font-size:2rem;font-weight:600;color:var(--gold);line-height:1}
+.stat-label{font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-top:4px;text-transform:uppercase}
+
+/* ===== Tag Chips ===== */
+.tag-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;align-items:center}
+.tag-bar-label{font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-right:8px}
+.tag-chip{
+  padding:5px 14px;border-radius:14px;font-size:11px;letter-spacing:1px;
+  border:0.5px solid var(--border);color:var(--text-dim);transition:all 0.2s ease;
+}
+.tag-chip:hover,.tag-chip.active{border-color:var(--gold);color:var(--gold);background:var(--gold-dim)}
+.tag-chip.active{background:var(--gold);color:var(--bg);border-color:var(--gold)}
+.tag-chip .count{font-size:10px;opacity:0.6;margin-left:2px}
+
+/* ===== Photo Grid ===== */
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+.photo-card{
+  background:var(--surface);border-radius:var(--radius);border:0.5px solid var(--border);
+  overflow:hidden;transition:all 0.3s ease;position:relative;
+}
+.photo-card:hover{border-color:#333;box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+.photo-card .thumb-wrap{position:relative;overflow:hidden;aspect-ratio:3/2;background:#111}
+.photo-card .thumb-wrap img{width:100%;height:100%;object-fit:cover;transition:transform 0.4s ease}
+.photo-card:hover .thumb-wrap img{transform:scale(1.04)}
+.photo-card .card-body{padding:16px}
+.photo-card .card-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px}
+.photo-card .card-meta{font-size:11px;color:var(--text-dim);display:flex;gap:12px}
+.photo-card .card-meta span{display:inline-flex;align-items:center;gap:3px}
+.photo-card .card-actions{display:flex;gap:4px;padding:0 16px 16px}
+.photo-card .card-actions .btn{flex:1;justify-content:center}
+.photo-card .widescreen-badge{
+  position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.7);color:var(--gold);
+  font-size:9px;letter-spacing:2px;padding:2px 8px;border-radius:10px;border:0.5px solid rgba(200,169,110,0.3);
+}
+
+/* ===== Empty State ===== */
+.empty-state{text-align:center;padding:80px 20px;grid-column:1/-1}
+.empty-state .icon{font-size:48px;margin-bottom:16px;opacity:0.3}
+.empty-state p{color:var(--text-weak);font-size:13px}
+
+/* ===== Modal ===== */
+.modal-overlay{
+  position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.8);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s ease;
+}
+.modal-overlay.open{opacity:1;pointer-events:auto}
+.modal{
+  background:var(--surface);border-radius:var(--radius);border:0.5px solid var(--border);
+  width:90%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.6);
+}
+.modal-header{
+  padding:20px 24px;border-bottom:0.5px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.modal-header h2{font-size:16px;font-weight:500;letter-spacing:1px}
+.modal-close{width:32px;height:32px;border-radius:50%;border:0.5px solid var(--border);background:none;color:var(--text-dim);font-size:18px;transition:all 0.2s}
+.modal-close:hover{color:var(--text);border-color:var(--text-dim)}
+.modal-body{padding:24px}
+.modal-footer{padding:16px 24px;border-top:0.5px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+
+/* ===== Form ===== */
+.form-group{margin-bottom:18px}
+.form-label{display:block;font-size:11px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.form-input,.form-select{
+  width:100%;padding:10px 14px;background:var(--bg);border:0.5px solid var(--border);
+  border-radius:var(--radius);color:var(--text);font-size:13px;font-family:inherit;transition:border-color 0.2s;
+}
+.form-input:focus,.form-select:focus{outline:none;border-color:var(--gold)}
+.form-select option{background:var(--surface);color:var(--text)}
+.form-hint{font-size:10px;color:var(--text-weak);margin-top:4px}
+
+/* Upload Zone */
+.upload-zone{
+  border:1px dashed var(--border);border-radius:var(--radius);padding:32px;text-align:center;
+  transition:all 0.3s ease;cursor:pointer;background:var(--bg);
+}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--gold);background:var(--gold-dim)}
+.upload-zone .icon{font-size:36px;margin-bottom:8px;opacity:0.4}
+.upload-zone p{font-size:12px;color:var(--text-dim)}
+.upload-zone .preview-img{max-height:180px;margin:12px auto 0;border-radius:4px;display:none}
+
+/* Tag Manager */
+.tag-manager{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tag-manager-item{
+  padding:4px 12px;border-radius:12px;font-size:11px;letter-spacing:1px;
+  background:var(--bg);border:0.5px solid var(--border);color:var(--text-dim);
+  display:inline-flex;align-items:center;gap:6px;
+}
+.tag-manager-item .remove-tag{font-size:14px;cursor:pointer;opacity:0.4;transition:opacity 0.2s}
+.tag-manager-item .remove-tag:hover{opacity:1;color:var(--danger)}
+.tag-manager-add{display:flex;gap:6px}
+.tag-manager-add input{padding:4px 10px;background:var(--bg);border:0.5px solid var(--border);border-radius:12px;color:var(--text);font-size:11px;width:100px}
+.tag-manager-add input:focus{outline:none;border-color:var(--gold)}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:24px;right:24px;z-index:300;padding:12px 24px;border-radius:var(--radius);
+  font-size:13px;font-weight:500;color:#fff;background:#1a1a1a;border:0.5px solid var(--border);
+  box-shadow:0 8px 24px rgba(0,0,0,0.5);transform:translateY(100px);opacity:0;transition:all 0.3s ease;
+}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-color:var(--success);color:var(--success)}
+.toast.error{border-color:var(--danger);color:var(--danger)}
+
+/* ===== Responsive ===== */
+@media(max-width:768px){
+  .photo-grid{grid-template-columns:1fr}
+  .topbar{padding:0 12px}
+  .topbar h1{font-size:1rem;letter-spacing:2px}
+  .stats-bar{flex-wrap:wrap}
+  .stat-card{min-width:80px;padding:12px}
+  .stat-num{font-size:1.5rem}
+  .modal{max-width:95vw}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== Topbar ===== -->
+<header class="topbar">
+  <h1>MIRACLE</h1>
+  <div class="topbar-actions">
+    <span style="font-size:11px;color:var(--text-dim);letter-spacing:1px">作品管理后台</span>
+    <a href="index.html" class="btn btn-sm" target="_blank">→ 查看网站</a>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ===== Stats ===== -->
+  <div class="stats-bar" id="statsBar"></div>
+
+  <!-- ===== Tag Filter ===== -->
+  <div class="tag-bar" id="tagBar">
+    <span class="tag-bar-label">分类筛选</span>
+  </div>
+
+  <!-- ===== Actions ===== -->
+  <div style="display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="openAddModal()">+ 添加作品</button>
+    <button class="btn" onclick="exportData()">⬇ 导出数据</button>
+    <button class="btn" id="btnRefresh" onclick="location.reload()">↻ 刷新</button>
+  </div>
+
+  <!-- ===== Photo Grid ===== -->
+  <div class="photo-grid" id="photoGrid"></div>
+</div>
+
+<!-- ===== Add/Edit Modal ===== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">添加作品</h2>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <!-- Upload -->
+      <div class="form-group" id="uploadGroup">
+        <label class="form-label">上传照片</label>
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+          <div class="icon">📁</div>
+          <p>点击或拖拽上传 JPG/PNG 照片</p>
+          <img class="preview-img" id="previewImg">
+        </div>
+        <input type="file" id="fileInput" accept="image/jpeg,image/png" style="display:none" onchange="handleFileSelect(this)">
+      </div>
+      <!-- Title -->
+      <div class="form-group">
+        <label class="form-label">作品标题</label>
+        <input class="form-input" id="inputTitle" placeholder="给作品起个名字...">
+      </div>
+      <!-- Tag -->
+      <div class="form-group">
+        <label class="form-label">分类标签</label>
+        <select class="form-select" id="inputTag"></select>
+      </div>
+      <!-- Current thumb -->
+      <div class="form-group" id="thumbInfo" style="display:none">
+        <label class="form-label">当前缩略图</label>
+        <div class="form-hint" id="thumbPath"></div>
+      </div>
+      <!-- Hidden fields -->
+      <input type="hidden" id="inputFile">
+      <input type="hidden" id="inputThumb">
+      <input type="hidden" id="inputAspect">
+      <input type="hidden" id="editIndex" value="-1">
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" id="btnSave" onclick="savePhoto()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Tag Management Modal ===== -->
+<div class="modal-overlay" id="tagModalOverlay">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <h2>管理分类</h2>
+      <button class="modal-close" onclick="closeTagModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="form-hint" style="margin-bottom:16px">添加或移除照片分类标签（至少保留一个）</p>
+      <div class="tag-manager" id="tagManagerList"></div>
+      <div class="tag-manager-add" style="margin-top:12px">
+        <input type="text" id="newTagInput" placeholder="新分类名..." onkeydown="if(event.key==='Enter')addTag()">
+        <button class="btn btn-sm btn-primary" onclick="addTag()">添加</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeTagModal()">完成</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Toast ===== -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==========================================
+   Admin Panel — 照片管理后台
+   ========================================== */
+
+var photos = [];
+var tags = ['landscape','portrait','humanistic','anime','drone','street','night'];
+var tagLabels = { landscape:'风光',portrait:'人像',humanistic:'人文',anime:'动漫',drone:'航拍',street:'街拍',night:'夜景' };
+var currentFilter = 'all';
+var editingIndex = -1;
+var uploadedFile = null;
+var generatedThumbBlob = null;
+
+/* ===== localStorage keys ===== */
+var LS_PHOTOS = 'miracle_photos';
+var LS_TAGS = 'miracle_tags';
+var LS_TAGLABELS = 'miracle_tag_labels';
+
+/* ===== Init ===== */
+loadPhotos();
+
+var DEFAULT_PHOTOS = [
+  { file:'photos/00-2923.webp',thumb:'thumbs/00-2923.webp',tag:'landscape',title:'Golden Hour',aspectRatio:1.50 },
+  { file:'photos/00-3279.webp',thumb:'thumbs/00-3279.webp',tag:'landscape',title:'City Lights',aspectRatio:1.50 },
+  { file:'photos/00-3531.webp',thumb:'thumbs/00-3531.webp',tag:'landscape',title:'Urban Horizon',aspectRatio:1.50 },
+  { file:'photos/00-4361.webp',thumb:'thumbs/00-4361.webp',tag:'landscape',title:'Twilight Melody',aspectRatio:1.50 },
+  { file:'photos/00-4443.webp',thumb:'thumbs/00-4443.webp',tag:'landscape',title:'Silent Streets',aspectRatio:1.50 },
+  { file:'photos/00-4561.webp',thumb:'thumbs/00-4561.webp',tag:'landscape',title:'Winter Glow',aspectRatio:1.50 },
+  { file:'photos/00-4793.webp',thumb:'thumbs/00-4793.webp',tag:'landscape',title:'Night Symphony',aspectRatio:1.50 },
+  { file:'photos/动漫1-2939.webp',thumb:'thumbs/动漫1-2939.webp',tag:'anime',title:'Character I',aspectRatio:2.35 },
+  { file:'photos/动漫2-2940.webp',thumb:'thumbs/动漫2-2940.webp',tag:'anime',title:'Character II',aspectRatio:1.50 },
+  { file:'photos/无人机1-2937.webp',thumb:'thumbs/无人机1-2937.webp',tag:'drone',title:'Aerial View',aspectRatio:1.24 }
+];
+
+function loadPhotos(){
+  // 1. 从 localStorage 加载
+  var cached = localStorage.getItem(LS_PHOTOS);
+  if(cached){
+    try {
+      photos = JSON.parse(cached);
+      if(photos && photos.length > 0){
+        loadTagsFromStorage();
+        extractTags();
+        render();
+        return;
+      }
+    } catch(e){}
+  }
+
+  // 2. 兜底：内置数据 + 写入localStorage
+  photos = DEFAULT_PHOTOS.slice();
+  saveToStorage();
+  loadTagsFromStorage();
+  extractTags();
+  render();
+}
+
+function loadTagsFromStorage(){
+  var t = localStorage.getItem(LS_TAGS);
+  if(t){
+    try { tags = JSON.parse(t); } catch(e){}
+  }
+  var l = localStorage.getItem(LS_TAGLABELS);
+  if(l){
+    try { tagLabels = JSON.parse(l); } catch(e){}
+  }
+}
+
+function saveToStorage(){
+  localStorage.setItem(LS_PHOTOS, JSON.stringify(photos));
+  localStorage.setItem(LS_TAGS, JSON.stringify(tags));
+  localStorage.setItem(LS_TAGLABELS, JSON.stringify(tagLabels));
+  // 触发同源其他标签页的 storage 事件
+  window.dispatchEvent(new StorageEvent('storage', { key: LS_PHOTOS }));
+}
+
+function extractTags(){
+  var set = {};
+  photos.forEach(function(p){ if(p.tag) set[p.tag]=true; });
+  // merge with existing
+  Object.keys(set).forEach(function(t){ if(tags.indexOf(t)===-1) tags.push(t); });
+}
+
+/* ===== Render ===== */
+function render(){
+  renderStats();
+  renderTags();
+  renderGrid();
+}
+
+function renderStats(){
+  var all = photos.length;
+  var counts = {};
+  photos.forEach(function(p){ counts[p.tag] = (counts[p.tag]||0)+1; });
+  var html = '<div class="stat-card"><div class="stat-num">'+all+'</div><div class="stat-label">全部作品</div></div>';
+  tags.forEach(function(t){
+    html += '<div class="stat-card"><div class="stat-num">'+(counts[t]||0)+'</div><div class="stat-label">'+(tagLabels[t]||t)+'</div></div>';
+  });
+  document.getElementById('statsBar').innerHTML = html;
+}
+
+function renderTags(){
+  var bar = document.getElementById('tagBar');
+  var html = '<span class="tag-bar-label">分类筛选</span>';
+  html += '<span class="tag-chip'+(currentFilter==='all'?' active':'')+'" onclick="setFilter(\'all\')">全部 <span class="count">'+photos.length+'</span></span>';
+  tags.forEach(function(t){
+    var count = photos.filter(function(p){ return p.tag===t; }).length;
+    html += '<span class="tag-chip'+(currentFilter===t?' active':'')+'" onclick="setFilter(\''+t+'\')">'+(tagLabels[t]||t)+' <span class="count">'+count+'</span></span>';
+  });
+  html += '<button class="btn btn-sm" style="margin-left:auto" onclick="openTagModal()">⚙ 管理分类</button>';
+  bar.innerHTML = html;
+}
+
+function renderGrid(){
+  var grid = document.getElementById('photoGrid');
+  var filtered = currentFilter === 'all' ? photos : photos.filter(function(p){ return p.tag === currentFilter; });
+
+  if(filtered.length === 0){
+    grid.innerHTML = '<div class="empty-state"><div class="icon">📷</div><p>还没有作品，点击上方按钮添加</p></div>';
+    return;
+  }
+
+  var html = '';
+  filtered.forEach(function(p, idx){
+    var realIdx = photos.indexOf(p);
+    var isWide = p.aspectRatio && p.aspectRatio > 2.0;
+    html += '<div class="photo-card">';
+    html += '<div class="thumb-wrap">';
+    html += '<img src="'+p.thumb+'" alt="'+p.title+'" loading="lazy">';
+    if(isWide) html += '<span class="widescreen-badge">WIDE</span>';
+    html += '</div>';
+    html += '<div class="card-body">';
+    html += '<div class="card-title">'+escHtml(p.title||'未命名')+'</div>';
+    html += '<div class="card-meta">';
+    html += '<span>🏷 '+(tagLabels[p.tag]||p.tag)+'</span>';
+    html += '<span>📐 '+p.aspectRatio.toFixed(2)+':1</span>';
+    html += '</div></div>';
+    html += '<div class="card-actions">';
+    html += '<button class="btn btn-sm" onclick="openEditModal('+realIdx+')">✎ 编辑</button>';
+    html += '<button class="btn btn-sm btn-danger" onclick="deletePhoto('+realIdx+')">✕ 删除</button>';
+    html += '</div></div>';
+  });
+  grid.innerHTML = html;
+}
+
+/* ===== Filter ===== */
+function setFilter(tag){ currentFilter = tag; render(); }
+
+/* ===== Add Modal ===== */
+function openAddModal(){
+  editingIndex = -1;
+  uploadedFile = null;
+  generatedThumbBlob = null;
+  document.getElementById('modalTitle').textContent = '添加作品';
+  document.getElementById('inputTitle').value = '';
+  document.getElementById('inputFile').value = '';
+  document.getElementById('inputThumb').value = '';
+  document.getElementById('inputAspect').value = '';
+  document.getElementById('editIndex').value = '-1';
+  document.getElementById('previewImg').style.display = 'none';
+  document.getElementById('uploadGroup').style.display = '';
+  document.getElementById('thumbInfo').style.display = 'none';
+  document.getElementById('btnSave').textContent = '添加';
+  populateTagSelect('');
+  openModal();
+}
+
+function openEditModal(idx){
+  editingIndex = idx;
+  var p = photos[idx];
+  uploadedFile = null;
+  generatedThumbBlob = null;
+  document.getElementById('modalTitle').textContent = '编辑作品';
+  document.getElementById('inputTitle').value = p.title || '';
+  document.getElementById('inputFile').value = p.file;
+  document.getElementById('inputThumb').value = p.thumb;
+  document.getElementById('inputAspect').value = p.aspectRatio;
+  document.getElementById('editIndex').value = idx;
+  document.getElementById('previewImg').style.display = 'none';
+  document.getElementById('uploadGroup').style.display = '';
+  document.getElementById('thumbInfo').style.display = '';
+  document.getElementById('thumbPath').textContent = p.thumb;
+  document.getElementById('btnSave').textContent = '保存修改';
+  populateTagSelect(p.tag);
+  openModal();
+}
+
+function populateTagSelect(current){
+  var sel = document.getElementById('inputTag');
+  sel.innerHTML = '';
+  tags.forEach(function(t){
+    sel.innerHTML += '<option value="'+t+'"'+(t===current?' selected':'')+'>'+(tagLabels[t]||t)+'</option>';
+  });
+}
+
+/* ===== File Upload ===== */
+function handleFileSelect(input){
+  if(!input.files || !input.files[0]) return;
+  var file = input.files[0];
+  if(!file.type.match(/image\/(jpeg|png)/)){ toast('仅支持 JPG/PNG 格式','error'); return; }
+  uploadedFile = file;
+
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var preview = document.getElementById('previewImg');
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+
+    // 自动检测宽高比
+    var img = new Image();
+    img.onload = function(){
+      var ratio = img.width / img.height;
+      ratio = Math.round(ratio * 100) / 100;
+      document.getElementById('inputAspect').value = ratio;
+      // 生成文件名
+      var name = file.name.replace(/\.[^.]+$/,'');
+      document.getElementById('inputFile').value = 'photos/' + file.name;
+      document.getElementById('inputThumb').value = 'thumbs/' + name + '.webp';
+      if(!document.getElementById('inputTitle').value){
+        document.getElementById('inputTitle').value = name;
+      }
+      // 生成缩略图
+      generateThumb(img);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function generateThumb(img){
+  var canvas = document.createElement('canvas');
+  var maxW = 1200;
+  var w = maxW;
+  var h = Math.round(img.height * maxW / img.width);
+  canvas.width = w;
+  canvas.height = h;
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, w, h);
+  canvas.toBlob(function(blob){
+    generatedThumbBlob = blob;
+    toast('✓ 缩略图已生成 ('+w+'x'+h+')', 'success');
+  }, 'image/webp', 0.85);
+}
+
+/* ===== Save ===== */
+function savePhoto(){
+  var title = document.getElementById('inputTitle').value.trim();
+  var tag = document.getElementById('inputTag').value;
+  var file = document.getElementById('inputFile').value.trim();
+  var thumb = document.getElementById('inputThumb').value.trim();
+  var ratio = parseFloat(document.getElementById('inputAspect').value) || 1.5;
+
+  if(!file){ toast('请先上传照片','error'); return; }
+  if(!title){ toast('请输入作品标题','error'); return; }
+
+  var photo = { file:file, thumb:thumb, tag:tag, title:title, aspectRatio:ratio };
+
+  if(editingIndex >= 0){
+    photos[editingIndex] = photo;
+    toast('✓ 作品已更新，主站已同步', 'success');
+  } else {
+    photos.push(photo);
+    toast('✓ 作品已添加，主站已同步', 'success');
+  }
+
+  saveToStorage();
+  closeModal();
+  render();
+
+  // 提示用户导出
+  if(generatedThumbBlob){
+    setTimeout(function(){
+      toast('💡 记得点击"导出数据"保存修改！', 'success');
+    }, 500);
+  }
+}
+
+/* ===== Delete ===== */
+function deletePhoto(idx){
+  var p = photos[idx];
+  if(!confirm('确定删除 "'+p.title+'" 吗？\n\n此操作只从数据中移除，不会删除硬盘上的文件。')) return;
+  photos.splice(idx, 1);
+  saveToStorage();
+  toast('✓ 已删除，主站已同步', 'success');
+  render();
+}
+
+/* ===== Export ===== */
+function exportData(){
+  var json = JSON.stringify(photos, null, 2);
+  downloadFile('photos.json', json, 'application/json');
+  toast('✓ photos.json 已下载，请放入 data/ 文件夹', 'success');
+
+  // 如果有生成的缩略图未保存，逐一提示下载
+  if(generatedThumbBlob){
+    setTimeout(function(){
+      var url = URL.createObjectURL(generatedThumbBlob);
+      var a = document.createElement('a');
+      var thumbPath = document.getElementById('inputThumb').value;
+      a.href = url;
+      a.download = thumbPath.split('/').pop();
+      a.click();
+      URL.revokeObjectURL(url);
+      generatedThumbBlob = null;
+      toast('✓ 缩略图已下载，请放入 thumbs/ 文件夹', 'success');
+    }, 300);
+  }
+}
+
+function downloadFile(filename, content, type){
+  var blob = new Blob([content], { type: type });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ===== Tag Management ===== */
+function openTagModal(){
+  document.getElementById('tagModalOverlay').classList.add('open');
+  renderTagManager();
+}
+function closeTagModal(){
+  document.getElementById('tagModalOverlay').classList.remove('open');
+  render();
+}
+function renderTagManager(){
+  var list = document.getElementById('tagManagerList');
+  var html = '';
+  tags.forEach(function(t){
+    var count = photos.filter(function(p){ return p.tag === t; }).length;
+    html += '<div class="tag-manager-item">';
+    html += escHtml(tagLabels[t]||t) + ' <span style="color:var(--text-weak);font-size:10px">('+count+')</span>';
+    if(tags.length > 1){
+      html += '<span class="remove-tag" onclick="removeTag(\''+t+'\')" title="删除此分类">&times;</span>';
+    }
+    html += '</div>';
+  });
+  list.innerHTML = html;
+}
+function addTag(){
+  var input = document.getElementById('newTagInput');
+  var val = input.value.trim().toLowerCase().replace(/\s+/g,'-');
+  if(!val || tags.indexOf(val) !== -1){ input.value=''; return; }
+  tags.push(val);
+  tagLabels[val] = input.value.trim();
+  input.value = '';
+  saveToStorage();
+  renderTagManager();
+}
+function removeTag(tag){
+  if(tags.length <= 1){ toast('至少保留一个分类','error'); return; }
+  var count = photos.filter(function(p){ return p.tag === tag; }).length;
+  if(count > 0 && !confirm('分类 "'+tag+'" 下有 '+count+' 张作品。\n删除后这些作品将变为"未分类"。确认删除？')) return;
+  tags = tags.filter(function(t){ return t !== tag; });
+  photos.forEach(function(p){ if(p.tag === tag) p.tag = tags[0]; });
+  saveToStorage();
+  renderTagManager();
+}
+
+/* ===== Modal ===== */
+function openModal(){ document.getElementById('modalOverlay').classList.add('open'); }
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
+
+/* ===== Drag & Drop ===== */
+(function(){
+  var zone = document.getElementById('uploadZone');
+  if(!zone) return;
+  zone.addEventListener('dragover',function(e){ e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave',function(){ zone.classList.remove('dragover'); });
+  zone.addEventListener('drop',function(e){
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    if(e.dataTransfer.files && e.dataTransfer.files[0]){
+      handleFileSelect({ files: e.dataTransfer.files });
+    }
+  });
+})();
+
+/* ===== Helpers ===== */
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function toast(msg, type){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast '+(type||'');
+  // Force reflow
+  t.offsetHeight;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+
+/* ===== Click outside modal to close ===== */
+document.getElementById('modalOverlay').addEventListener('click',function(e){
+  if(e.target === this) closeModal();
+});
+document.getElementById('tagModalOverlay').addEventListener('click',function(e){
+  if(e.target === this) closeTagModal();
+});
+</script>
+
+</body>
+</html>

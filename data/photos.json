@@ -1,0 +1,72 @@
+[
+  {
+    "file": "photos/00-2923.webp",
+    "thumb": "thumbs/00-2923.webp",
+    "tag": "landscape",
+    "title": "Golden Hour",
+    "aspectRatio": 1.5
+  },
+  {
+    "file": "photos/00-3279.webp",
+    "thumb": "thumbs/00-3279.webp",
+    "tag": "landscape",
+    "title": "City Lights",
+    "aspectRatio": 1.5
+  },
+  {
+    "file": "photos/00-3531.webp",
+    "thumb": "thumbs/00-3531.webp",
+    "tag": "landscape",
+    "title": "Urban Horizon",
+    "aspectRatio": 1.5
+  },
+  {
+    "file": "photos/00-4361.webp",
+    "thumb": "thumbs/00-4361.webp",
+    "tag": "landscape",
+    "title": "Twilight Melody",
+    "aspectRatio": 1.5
+  },
+  {
+    "file": "photos/00-4443.webp",
+    "thumb": "thumbs/00-4443.webp",
+    "tag": "landscape",
+    "title": "Silent Streets",
+    "aspectRatio": 1.5
+  },
+  {
+    "file": "photos/00-4561.webp",
+    "thumb": "thumbs/00-4561.webp",
+    "tag": "landscape",
+    "title": "Winter Glow",
+    "aspectRatio": 1.5
+  },
+  {
+    "file": "photos/00-4793.webp",
+    "thumb": "thumbs/00-4793.webp",
+    "tag": "landscape",
+    "title": "Night Symphony",
+    "aspectRatio": 1.5
+  },
+  {
+    "file": "photos/动漫1-2939.webp",
+    "thumb": "thumbs/动漫1-2939.webp",
+    "tag": "anime",
+    "title": "Character I",
+    "aspectRatio": 2.35
+  },
+  {
+    "file": "photos/动漫2-2940.webp",
+    "thumb": "thumbs/动漫2-2940.webp",
+    "tag": "anime",
+    "title": "Character II",
+    "aspectRatio": 1.5
+  },
+  {
+    "file": "photos/无人机1-2937.webp",
+    "thumb": "thumbs/无人机1-2937.webp",
+    "tag": "drone",
+    "title": "Aerial View",
+    "aspectRatio": 1.24
+  }
+]

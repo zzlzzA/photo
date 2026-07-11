@@ -1,0 +1,762 @@
+/* ==========================================
+   暗黑电影感 — 设计系统
+   Photography Portfolio by Custom Design
+   ========================================== */
+
+/* --- CSS Custom Properties --- */
+:root {
+  --color-bg:       #0A0A0A;
+  --color-surface:  #141414;
+  --color-gold:     #C8A96E;
+  --color-gold-dim: rgba(200, 169, 110, 0.2);
+  --color-gold-glow: rgba(200, 169, 110, 0.08);
+  --color-text:     #E8E0D0;
+  --color-text-dim: #888888;
+  --color-text-weak:#555555;
+  --color-border:   #1A1A1A;
+
+  --font-serif:     Georgia, 'Noto Serif SC', 'SimSun', serif;
+  --font-sans:      'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-body:      system-ui, -apple-system, sans-serif;
+
+  --spacing-xl:     120px;
+  --spacing-lg:     60px;
+  --spacing-md:     32px;
+  --spacing-sm:     16px;
+  --radius:         4px;
+
+  --transition-slow: 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --transition-med:  0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --transition-fast: 0.25s ease;
+}
+
+/* --- Reset --- */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  overflow-x: hidden;
+  background: var(--color-bg);
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+}
+
+/* --- Typography --- */
+.section-title {
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-weight: 400;
+  color: var(--color-text);
+  text-align: center;
+  letter-spacing: 4px;
+}
+
+.gold-divider {
+  width: 60px;
+  height: 0.5px;
+  background: var(--color-gold);
+  margin: var(--spacing-md) auto;
+  opacity: 0.6;
+}
+
+/* --- Selection --- */
+::selection {
+  background: var(--color-gold);
+  color: var(--color-bg);
+}
+
+/* --- Scrollbar --- */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: #222;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #333;
+}
+
+/* ==========================================
+   Curtain (开幕幕布)
+   ========================================== */
+
+.curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.curtain-left,
+.curtain-right {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  background: var(--color-bg);
+  transition: transform 1.2s cubic-bezier(0.77, 0, 0.18, 1);
+}
+
+.curtain-left  { left: 0;  transform: translateX(0); }
+.curtain-right { right: 0; transform: translateX(0); }
+
+.curtain.open .curtain-left  { transform: translateX(-100%); }
+.curtain.open .curtain-right { transform: translateX(100%); }
+
+.curtain-logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  font-family: var(--font-serif);
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  color: var(--color-gold);
+  letter-spacing: 8px;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.6s ease;
+  opacity: 0;
+}
+
+.curtain.show-logo .curtain-logo {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+/* ==========================================
+   Canvas Particles
+   ========================================== */
+
+#particles-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* ==========================================
+   Cursor Glow
+   ========================================== */
+
+.cursor-glow {
+  position: fixed;
+  z-index: 998;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(200,169,110,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* ==========================================
+   Film Grain (胶片噪点)
+   ========================================== */
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+/* ==========================================
+   Section 1: Hero
+   ========================================== */
+
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  min-height: 700px;
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background:
+    radial-gradient(ellipse at center, transparent 40%, rgba(10,10,10,0.7) 100%),
+    linear-gradient(to bottom, rgba(10,10,10,0.3) 0%, transparent 50%, rgba(10,10,10,0.8) 100%);
+  pointer-events: none;
+}
+
+.hero-slider {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 1.2s ease-in-out;
+}
+
+.hero-slide.active {
+  opacity: 1;
+}
+
+/* 胶片遮罩叠加层 — 上下黑边模拟宽银幕 */
+.hero-slider::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    var(--color-bg) 0%,
+    transparent 15%,
+    transparent 85%,
+    var(--color-bg) 100%
+  );
+}
+
+.hero-content {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.hero-name {
+  font-family: var(--font-serif);
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 400;
+  color: var(--color-gold);
+  letter-spacing: 8px;
+  text-shadow: 0 0 60px rgba(200,169,110,0.3);
+  opacity: 0;
+  animation: heroFadeIn 1.2s var(--transition-slow) 0.3s forwards;
+}
+
+.hero-subtitle {
+  font-family: var(--font-sans);
+  font-size: clamp(0.7rem, 1.5vw, 0.9rem);
+  font-weight: 300;
+  color: var(--color-text-dim);
+  letter-spacing: 6px;
+  margin-top: var(--spacing-sm);
+  opacity: 0;
+  animation: heroFadeIn 1.2s var(--transition-slow) 0.6s forwards;
+}
+
+.hero-divider {
+  width: 80px;
+  height: 0.5px;
+  background: var(--color-gold);
+  margin: 24px auto 0;
+  opacity: 0;
+  animation: heroFadeIn 1.2s var(--transition-slow) 0.9s forwards;
+}
+
+@keyframes heroFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- 滚动提示 --- */
+.scroll-hint {
+  position: absolute;
+  z-index: 4;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  animation: scrollPulse 2s ease-in-out infinite;
+}
+
+.scroll-hint span {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--color-text-dim);
+}
+
+.scroll-line {
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--color-gold), transparent);
+  opacity: 0.5;
+}
+
+@keyframes scrollPulse {
+  0%, 100% { opacity: 0.5; transform: translateX(-50%) translateY(0); }
+  50% { opacity: 1; transform: translateX(-50%) translateY(8px); }
+}
+
+/* ==========================================
+   Lens Flare (随机镜头光晕)
+   ========================================== */
+
+@keyframes lensFlare {
+  0%, 100% { opacity: 0; transform: translateX(0); }
+  30% { opacity: 0.04; }
+  50% { opacity: 0.08; transform: translateX(30px); }
+  70% { opacity: 0.04; }
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  top: 10%;
+  right: 15%;
+  width: 400px;
+  height: 200px;
+  background: radial-gradient(ellipse at center, rgba(200,169,110,0.15) 0%, transparent 70%);
+  pointer-events: none;
+  animation: lensFlare 4s ease-in-out infinite;
+}
+
+/* ==========================================
+   Section 2: Gallery — 电影画幅风格
+   ========================================== */
+
+.gallery {
+  padding: var(--spacing-xl) 5vw;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.gallery-header {
+  margin-bottom: var(--spacing-lg);
+}
+
+/* --- 标签筛选栏 --- */
+.filter-bar {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  margin-bottom: 60px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  color: var(--color-text-dim);
+  padding: 8px 24px;
+  border: 0.5px solid var(--color-border);
+  border-radius: 20px;
+  transition: all var(--transition-med);
+  text-transform: uppercase;
+}
+
+.filter-btn:hover {
+  color: var(--color-text);
+  border-color: var(--color-gold-dim);
+}
+
+.filter-btn.active {
+  color: var(--color-bg);
+  background: var(--color-gold);
+  border-color: var(--color-gold);
+}
+
+/* --- 电影画幅画廊网格 --- */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px 24px;
+  transition: opacity 0.5s ease;
+}
+
+/* 宽银幕照片跨双列 */
+.gallery-item.widescreen {
+  grid-column: 1 / -1;
+}
+
+/* --- 单张作品卡片 --- */
+.gallery-item {
+  position: relative;
+  cursor: pointer;
+  border-radius: 2px;
+  background: var(--color-surface);
+  opacity: 0;
+  transform: translateY(40px);
+  transition:
+    transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    box-shadow 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    opacity 0.6s ease;
+  /* 胶片边框 */
+  border: 1px solid #1a1a1a;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+}
+
+.gallery-item.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --- 照片容器（保留完整比例，不裁剪） --- */
+.gallery-item .photo-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1px;
+  line-height: 0;
+}
+
+.gallery-item .photo-wrap img {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* --- Hover效果 --- */
+.gallery-item:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(200,169,110,0.25);
+  border-color: #2a2a2a;
+  z-index: 10;
+}
+
+.gallery-item:hover .photo-wrap img {
+  transform: scale(1.03);
+}
+
+/* --- 暗金覆层 + 标题 --- */
+.gallery-item .photo-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(10,10,10,0.85) 0%,
+    rgba(10,10,10,0.1) 40%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  display: flex;
+  align-items: flex-end;
+  padding: 28px 24px;
+  pointer-events: none;
+}
+
+.gallery-item:hover .photo-overlay {
+  opacity: 1;
+}
+
+.gallery-item .photo-title {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-style: italic;
+  color: var(--color-gold);
+  letter-spacing: 2px;
+  transform: translateY(10px);
+  transition: transform 0.4s ease 0.1s;
+}
+
+.gallery-item:hover .photo-title {
+  transform: translateY(0);
+}
+
+/* --- 底部信息栏 --- */
+.gallery-item .photo-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: var(--color-bg);
+  border-top: 0.5px solid #1a1a1a;
+}
+
+.gallery-item .photo-tag {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+}
+
+.gallery-item .photo-arrow {
+  font-size: 14px;
+  color: var(--color-text-weak);
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.gallery-item:hover .photo-arrow {
+  color: var(--color-gold);
+  transform: translateX(3px);
+}
+
+/* ==========================================
+   Section 3: Social
+   ========================================== */
+
+.social {
+  padding: var(--spacing-xl) 5vw var(--spacing-lg);
+  text-align: center;
+}
+
+.connect-title {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 5px;
+  color: var(--color-text-dim);
+  margin-top: var(--spacing-md);
+}
+
+.social-links {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.social-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 0.5px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-med);
+}
+
+.social-icon:hover {
+  border-color: var(--color-gold);
+  background: var(--color-gold-glow);
+  transform: translateY(-3px);
+}
+
+.social-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: var(--color-text-dim);
+  transition: fill var(--transition-med);
+}
+
+.social-icon:hover svg {
+  fill: var(--color-gold);
+}
+
+/* ==========================================
+   Section 4: Footer
+   ========================================== */
+
+.footer {
+  padding: var(--spacing-lg) 5vw;
+  text-align: center;
+  border-top: 0.5px solid var(--color-border);
+}
+
+.footer-copy {
+  font-size: 12px;
+  color: var(--color-text-weak);
+  letter-spacing: 1px;
+}
+
+.footer-tagline {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--color-text-weak);
+  margin-top: 8px;
+}
+
+/* ==========================================
+   Lightbox
+   ========================================== */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-med);
+}
+
+.lightbox.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.lightbox-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(10,10,10,0.95);
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 2;
+  font-size: 32px;
+  color: var(--color-text-dim);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-med);
+  line-height: 1;
+}
+
+.lightbox-close:hover {
+  color: var(--color-gold);
+  background: var(--color-gold-glow);
+}
+
+.lightbox-container {
+  position: relative;
+  z-index: 1;
+  max-width: 90vw;
+  max-height: 90vh;
+  transform: scale(0.9);
+  transition: transform var(--transition-slow);
+}
+
+.lightbox.open .lightbox-container {
+  transform: scale(1);
+}
+
+.lightbox-container img {
+  max-width: 90vw;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: var(--radius);
+  box-shadow: 0 4px 60px rgba(0,0,0,0.5), 0 0 0 1px var(--color-gold-dim);
+}
+
+.lightbox-caption {
+  text-align: center;
+  margin-top: var(--spacing-sm);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--color-text-dim);
+  letter-spacing: 2px;
+}
+
+/* ==========================================
+   Responsive
+   ========================================== */
+
+@media (max-width: 1023px) {
+  .gallery-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 16px;
+  }
+
+  .gallery-item.widescreen {
+    grid-column: 1 / -1;
+  }
+
+  .gallery-item .photo-overlay {
+    padding: 20px 16px;
+  }
+
+  .gallery-item .photo-title {
+    font-size: 0.95rem;
+  }
+
+  .gallery-item .photo-info {
+    padding: 10px 14px;
+  }
+}
+
+@media (max-width: 767px) {
+  :root {
+    --spacing-xl: 80px;
+    --spacing-lg: 40px;
+  }
+
+  .gallery-grid {
+    grid-template-columns: 1fr;
+    gap: 24px 0;
+  }
+
+  .gallery-item.widescreen {
+    grid-column: span 1;
+  }
+
+  .hero-name {
+    letter-spacing: 4px;
+  }
+
+  .hero-subtitle {
+    letter-spacing: 3px;
+  }
+
+  .filter-btn {
+    padding: 6px 16px;
+    font-size: 10px;
+  }
+
+  .cursor-glow {
+    display: none;
+  }
+
+  .scroll-hint {
+    bottom: 24px;
+  }
+
+  .scroll-line {
+    height: 24px;
+  }
+}
